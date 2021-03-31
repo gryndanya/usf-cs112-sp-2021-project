@@ -18,6 +18,10 @@ public class DataPoint {
 		this.label = null;
 	}
 	
+	public DataPoint() {
+		this(0.0, 0.0, "", false);
+	}
+	
 	public Double getF1() {
 		return this.f1;
 	}
