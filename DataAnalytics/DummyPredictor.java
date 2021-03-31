@@ -6,60 +6,60 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.Math;
 
-public class DummyPredictor extends Predictor{
+public class DummyPredictor extends Predictor {
 	
-	private Double trainAvg;
-	private Double testAvg;
+	public ArrayList<DataPoint> data;
 
-	@Override
-	ArrayList<DataPoint> readData(String filename) {
-		ArrayList<DataPoint> data = new ArrayList<DataPoint>();
-		Double trainSum = 0.0;
-		Double testSum = 0.0;
-		int numTrain = 0;
-		int numTest = 0;
-		for (int i = 0; i < data.size(); i++) {
-			DataPoint d = data.get(i);
-			Double f = d.getF1();
-			Double g = d.getF2();
-			String label = d.getLabel();
-			if(label.equals("Good")) {
-				trainSum += f+g;
-				numTrain += 1;
-			} else if (label.equals("Bad")) {
-				testSum += f+g;
-				numTest += 1;
+	public ArrayList<DataPoint> readData(String filename) {
+
+		ArrayList<DataPoint> data = new ArrayList<DataPoint>(20);
+
+		try {
+			Scanner fileData = new Scanner(new File(filename));
+			
+			while (fileData.hasNextLine()) {
+				Scanner line = new Scanner(fileData.nextLine());
+				DataPoint point = new DataPoint();
+				point.setF1(line.nextDouble());
+				point.setF2(line.nextDouble());
+				point.setLabel(line.next());
+				point.setIsTest(line.nextBoolean());
+				data.add(point);
 			}
+
+			fileData.close();
+			
+		} catch (FileNotFoundException ex) {
+			System.out.println("File Not Found");
 		}
-		this.trainAvg = trainSum/numTrain;
-		this.testAvg = testSum/numTest;
-		return null;
+		this.data = data;
+		return data;
 	}
 
-	@Override
-	String test(DataPoint data) {
-		double trainDist = Math.abs(data.getF1() - this.trainAvg);
-		double testDist = Math.abs(data.getF1() - this.testAvg);
-		double trainDist2 = Math.abs(data.getF2() - this.trainAvg);
-		double testDist2 = Math.abs(data.getF2() - this.testAvg);
-		
-		if((trainDist < testDist) || ( trainDist2 < testDist2)) {
-			return "Good";
+	public String test(DataPoint data) {
+		if (Math.abs(data.getF1() - data.getF2()) <= 2.0) {
+			return "Small";
 		} else {
-			return "Bad";
+			return "Big";
 		}
+
 	}
 
-	@Override
-	Double getAccuracy(ArrayList<DataPoint> data) {
+	public double getAccuracy(ArrayList<DataPoint> data) {
 		
-		return null;
-	}
-
-	@Override
-	Double getPrecision(ArrayList<DataPoint> data) {
+		double total = 15;
+		double right = 0;
 		
-		return null;
+		for (DataPoint point : data) {
+			if ((point.getIsTest() == true) && test(point).equals(point.getLabel())) {
+				right++;
+			}
+		}	
+		return (right / total) * 100;
 	}
 
+	public double getPrecision(ArrayList<DataPoint> data) {	
+		
+		return 100 - getAccuracy(data);
+	}
 }
